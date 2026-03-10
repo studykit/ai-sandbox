@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+CODEX_NPM_PACKAGE="${CODEX_NPM_PACKAGE:-@openai/codex@latest}"
+HOME_DIR="${HOME:-/home/ubuntu}"
+NPM_PREFIX="${NPM_CONFIG_PREFIX:-${HOME_DIR}/.npm-global}"
+
+mkdir -p "${HOME_DIR}/.local/bin" "${NPM_PREFIX}/bin"
+
+export HOME="${HOME_DIR}"
+export NPM_CONFIG_PREFIX="${NPM_PREFIX}"
+export PATH="${HOME_DIR}/.local/bin:${NPM_PREFIX}/bin:${PATH}"
+
+install_codex() {
+  if command -v codex >/dev/null 2>&1; then
+    echo "codex already installed at $(command -v codex)"
+    return
+  fi
+
+  npm install -g "${CODEX_NPM_PACKAGE}"
+}
+
+install_claude() {
+  if [[ -x "${HOME_DIR}/.local/bin/claude" ]]; then
+    echo "claude already installed at ${HOME_DIR}/.local/bin/claude"
+    return
+  fi
+
+  curl -fsSL https://claude.ai/install.sh | bash -s latest
+}
+
+install_opencode() {
+  if [[ -x "${HOME_DIR}/.local/bin/opencode" ]]; then
+    echo "opencode already installed at ${HOME_DIR}/.local/bin/opencode"
+    return
+  fi
+
+  curl -fsSL https://opencode.ai/install | bash
+}
+
+install_copilot() {
+  if [[ -x "${HOME_DIR}/.local/bin/copilot" ]]; then
+    echo "copilot already installed at ${HOME_DIR}/.local/bin/copilot"
+    return
+  fi
+
+  curl -fsSL https://gh.io/copilot-install | bash
+}
+
+install_codex
+install_claude
+install_opencode
+install_copilot
+
+echo "agent installation completed"
