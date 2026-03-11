@@ -1,0 +1,287 @@
+#compdef gemini
+
+# Zsh completion script for Gemini CLI
+# Generated for gemini-cli v0.21.0
+# https://github.com/google-gemini/gemini-cli
+
+_gemini() {
+  local line state
+
+  _arguments -C \
+    '(-d --debug)'{-d,--debug}'[Run in debug mode]' \
+    '(-v --version)'{-v,--version}'[Show version number]' \
+    '(-h --help)'{-h,--help}'[Show help]' \
+    '1: :_gemini_commands' \
+    '*::arg:->args'
+
+  case $line[1] in
+    mcp)
+      _gemini_mcp
+      ;;
+    extensions|extension)
+      _gemini_extensions
+      ;;
+    *)
+      _gemini_main_options
+      ;;
+  esac
+}
+
+_gemini_commands() {
+  local commands
+  commands=(
+    'mcp:Manage MCP servers'
+    'extensions:Manage Gemini CLI extensions'
+    'extension:Manage Gemini CLI extensions (alias)'
+  )
+  _describe -t commands 'gemini commands' commands
+}
+
+_gemini_main_options() {
+  _arguments \
+    '(-d --debug)'{-d,--debug}'[Run in debug mode]' \
+    '(-v --version)'{-v,--version}'[Show version number]' \
+    '(-h --help)'{-h,--help}'[Show help]' \
+    '(-p --prompt)'{-p,--prompt}'[Prompt appended to stdin (deprecated)]:prompt text:' \
+    '(-i --prompt-interactive)'{-i,--prompt-interactive}'[Execute prompt and continue in interactive mode]:prompt text:' \
+    '(-m --model)'{-m,--model}'[Specify model to use]:model name:' \
+    '(-s --sandbox)'{-s,--sandbox}'[Run in sandbox mode]' \
+    '(-y --yolo)'{-y,--yolo}'[Auto-accept all actions]' \
+    '--approval-mode[Set approval mode]:mode:(default auto_edit yolo)' \
+    '*'{-e,--extensions}'[Extensions to use]:extension:_gemini_installed_extensions' \
+    '(-l --list-extensions)'{-l,--list-extensions}'[List available extensions and exit]' \
+    '*--allowed-mcp-server-names[Allowed MCP server names]:server name:_gemini_mcp_servers' \
+    '*--allowed-tools[Tools allowed without confirmation]:tool name:' \
+    '(-r --resume)'{-r,--resume}'[Resume previous session]:session:(latest)' \
+    '--list-sessions[List available sessions and exit]' \
+    '--delete-session[Delete a session by index]:session index:' \
+    '*--include-directories[Additional directories in workspace]:directory:_directories' \
+    '(-o --output-format)'{-o,--output-format}'[Output format]:format:(text json stream-json)' \
+    '--screen-reader[Enable screen reader mode]' \
+    '--experimental-acp[Start agent in ACP mode]' \
+    '*:query:'
+}
+
+_gemini_mcp() {
+  local curcontext="$curcontext" state line
+  typeset -A opt_args
+
+  _arguments -C \
+    '1: :_gemini_mcp_commands' \
+    '*::arg:->args'
+
+  case $state in
+    args)
+      case $line[1] in
+        add)
+          _gemini_mcp_add
+          ;;
+        remove)
+          _gemini_mcp_remove
+          ;;
+        list)
+          # No additional arguments needed
+          ;;
+      esac
+      ;;
+  esac
+}
+
+_gemini_mcp_commands() {
+  local commands
+  commands=(
+    'add:Add an MCP server'
+    'remove:Remove an MCP server'
+    'list:List all configured MCP servers'
+  )
+  _describe -t commands 'mcp commands' commands
+}
+
+_gemini_mcp_add() {
+  _arguments \
+    '1:name:' \
+    '2:commandOrUrl:_files' \
+    '*:args:' \
+    '(-s --scope)'{-s,--scope}'[Configuration scope]:scope:(user project)' \
+    '(-t --transport --type)'{-t,--transport,--type}'[Transport type]:type:(stdio sse http)' \
+    '*'{-e,--env}'[Set environment variables]:KEY=value:' \
+    '*'{-H,--header}'[Set HTTP headers for SSE/HTTP]:header:' \
+    '--timeout[Connection timeout in milliseconds]:timeout (ms):' \
+    '--trust[Trust server (bypass confirmation prompts)]' \
+    '--description[Server description]:description:' \
+    '*--include-tools[Tools to include]:tool:' \
+    '*--exclude-tools[Tools to exclude]:tool:'
+}
+
+_gemini_mcp_remove() {
+  _arguments \
+    '1:name:_gemini_mcp_servers'
+}
+
+_gemini_mcp_servers() {
+  local servers
+  servers=(${(f)"$(gemini mcp list 2>/dev/null | grep -E '^\s+[a-zA-Z]' | awk '{print $1":"$2}' 2>/dev/null)"})
+  _describe -t servers 'MCP servers' servers
+}
+
+_gemini_extensions() {
+  local curcontext="$curcontext" state line
+  typeset -A opt_args
+
+  _arguments -C \
+    '1: :_gemini_extensions_commands' \
+    '*::arg:->args'
+
+  case $state in
+    args)
+      case $line[1] in
+        install)
+          _gemini_extensions_install
+          ;;
+        uninstall)
+          _gemini_extensions_uninstall
+          ;;
+        list)
+          # No additional arguments needed
+          ;;
+        update)
+          _gemini_extensions_update
+          ;;
+        disable)
+          _gemini_extensions_disable
+          ;;
+        enable)
+          _gemini_extensions_enable
+          ;;
+        link)
+          _gemini_extensions_link
+          ;;
+        new)
+          _gemini_extensions_new
+          ;;
+        validate)
+          _gemini_extensions_validate
+          ;;
+        settings)
+          _gemini_extensions_settings
+          ;;
+      esac
+      ;;
+  esac
+}
+
+_gemini_extensions_commands() {
+  local commands
+  commands=(
+    'install:Install an extension from git repository or local path'
+    'uninstall:Uninstall one or more extensions'
+    'list:List installed extensions'
+    'update:Update extensions'
+    'disable:Disable an extension'
+    'enable:Enable an extension'
+    'link:Link extension from local path for development'
+    'new:Create new extension from template'
+    'validate:Validate extension from local path'
+    'settings:Manage extension settings'
+  )
+  _describe -t commands 'extensions commands' commands
+}
+
+_gemini_extensions_install() {
+  _arguments \
+    '1:source:_files' \
+    '--ref[Git ref to install from]:git ref:' \
+    '--auto-update[Enable auto-updates]' \
+    '--pre-release[Allow pre-release versions]' \
+    '--consent[Auto-consent to installation warnings]'
+}
+
+_gemini_extensions_uninstall() {
+  _arguments \
+    '*:extension names:_gemini_installed_extensions'
+}
+
+_gemini_extensions_update() {
+  _arguments \
+    '1:extension name:_gemini_installed_extensions' \
+    '--all[Update all extensions]'
+}
+
+_gemini_extensions_disable() {
+  _arguments \
+    '1:extension name:_gemini_installed_extensions' \
+    '--scope[Scope to disable in]:scope:'
+}
+
+_gemini_extensions_enable() {
+  _arguments \
+    '1:extension name:_gemini_installed_extensions' \
+    '--scope[Scope to enable in]:scope:'
+}
+
+_gemini_extensions_link() {
+  _arguments \
+    '1:path:_directories'
+}
+
+_gemini_extensions_new() {
+  _arguments \
+    '1:path:_files' \
+    '2:template:'
+}
+
+_gemini_extensions_validate() {
+  _arguments \
+    '1:path:_directories'
+}
+
+_gemini_extensions_settings() {
+  local curcontext="$curcontext" state line
+  typeset -A opt_args
+
+  _arguments -C \
+    '1: :_gemini_extensions_settings_commands' \
+    '*::arg:->args'
+
+  case $state in
+    args)
+      case $line[1] in
+        set)
+          _gemini_extensions_settings_set
+          ;;
+        list)
+          _gemini_extensions_settings_list
+          ;;
+      esac
+      ;;
+  esac
+}
+
+_gemini_extensions_settings_commands() {
+  local commands
+  commands=(
+    'set:Set a specific setting for an extension'
+    'list:List all settings for an extension'
+  )
+  _describe -t commands 'settings commands' commands
+}
+
+_gemini_extensions_settings_set() {
+  _arguments \
+    '1:extension name:_gemini_installed_extensions' \
+    '2:setting:' \
+    '--scope[Scope to set the setting in]:scope:(user workspace)'
+}
+
+_gemini_extensions_settings_list() {
+  _arguments \
+    '1:extension name:_gemini_installed_extensions'
+}
+
+_gemini_installed_extensions() {
+  local extensions
+  extensions=(${(f)"$(gemini extensions list 2>/dev/null | grep -E '^\s+[a-zA-Z]' | awk '{print $1}' 2>/dev/null)"})
+  _describe -t extensions 'installed extensions' extensions
+}
+
+_gemini "$@"

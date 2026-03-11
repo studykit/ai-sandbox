@@ -5,14 +5,11 @@ IMAGE_NAME="${IMAGE_NAME:-ai-sandbox:latest}"
 HOME_VOLUME="${HOME_VOLUME:-ai-sandbox-home}"
 CONTAINER_NAME="${CONTAINER_NAME:-}"
 HOST_PWD="$(pwd)"
-HOST_CODEX_DIR="${HOME}/.codex"
 
 if ! command -v docker >/dev/null 2>&1; then
   echo "docker command not found" >&2
   exit 1
 fi
-
-mkdir -p "${HOST_CODEX_DIR}"
 
 docker_args=(
   run
@@ -20,7 +17,6 @@ docker_args=(
   -it
   --mount "type=bind,source=${HOST_PWD},target=${HOST_PWD}"
   --mount "type=volume,source=${HOME_VOLUME},target=/home/ubuntu"
-  --mount "type=bind,source=${HOST_CODEX_DIR},target=/home/ubuntu/.codex"
   -w "${HOST_PWD}"
   -e "HOST_PWD=${HOST_PWD}"
 )
@@ -29,4 +25,4 @@ if [[ -n "${CONTAINER_NAME}" ]]; then
   docker_args+=(--name "${CONTAINER_NAME}")
 fi
 
-exec docker "${docker_args[@]}" "${IMAGE_NAME}" sh -lc 'cp --update=none /usr/local/share/default-tmux.conf /home/ubuntu/.tmux.conf && exec zsh'
+exec docker "${docker_args[@]}" "${IMAGE_NAME}" zsh -l
