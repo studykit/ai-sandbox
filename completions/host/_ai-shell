@@ -22,6 +22,7 @@ _ai-shell_envvars() {
 
 _ai-shell() {
   _arguments -s \
+    '--tmux=[Start the container in tmux control mode with an optional tmux session name]:session name:' \
     '*-e[Pass environment variable to container]: :_ai-shell_envvars'
 }
 

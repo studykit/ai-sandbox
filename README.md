@@ -69,6 +69,16 @@ Run the helper script from the host project directory you want to work in:
 ./ai-shell
 ```
 
+If you want the container to open directly into iTerm2 tmux control mode:
+
+```bash
+./ai-shell --tmux
+
+# Or set an explicit tmux session name
+./ai-shell --tmux my-session
+./ai-shell --tmux=my-session
+```
+
 You can also run the container directly. `-it` is required so `zsh` and the agent CLIs can use an interactive TTY:
 
 ```bash
@@ -82,7 +92,9 @@ docker run --rm -it \
 
 What the script does:
 
-- starts the container in `zsh`
+- starts the container in `zsh` by default
+- can start the container in `tmux -CC` with `--tmux`
+- uses the current working directory name as the default tmux session name for `--tmux`
 - mounts the current host directory into the container at the exact same absolute path
 - sets the container working directory to that same path
 - mounts a persistent Docker volume to `/home/ubuntu` so agent binaries, login state, and settings survive container restarts
@@ -136,6 +148,7 @@ Optional variables:
 - `IMAGE_NAME`: image tag to run, default `ai-sandbox:latest`
 - `HOME_VOLUME`: Docker volume name mounted at `/home/ubuntu`, default `ai-sandbox-home`
 - `CONTAINER_NAME`: optional explicit container name
+- `TMUX_SESSION_NAME`: tmux session name used with `./ai-shell --tmux` when no CLI session name is provided; default behavior uses the current working directory name
 
 ## Completions directory
 

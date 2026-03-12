@@ -4,7 +4,10 @@ set -euo pipefail
 IMAGE_NAME="${IMAGE_NAME:-ai-sandbox:latest}"
 HOME_VOLUME="${HOME_VOLUME:-ai-sandbox-home}"
 CONTAINER_NAME="${CONTAINER_NAME:-}"
+TMUX_SESSION_NAME="${TMUX_SESSION_NAME:-ai-shell}"
 HOST_PWD="$(pwd)"
+DEFAULT_TMUX_SESSION_NAME="$(basename "${HOST_PWD}")"
+container_cmd=(zsh -l)
 
 if ! command -v docker >/dev/null 2>&1; then
   echo "docker command not found" >&2
@@ -25,8 +28,25 @@ while [[ $# -gt 0 ]]; do
       fi
       shift
       ;;
+    --tmux)
+      tmux_session_name="${DEFAULT_TMUX_SESSION_NAME}"
+      if [[ $# -gt 1 && "$2" != -* ]]; then
+        tmux_session_name="$2"
+        shift
+      elif [[ "${TMUX_SESSION_NAME}" != "ai-shell" ]]; then
+        tmux_session_name="${TMUX_SESSION_NAME}"
+      fi
+      container_cmd=(zsh -lc "exec tmux -CC new-session -A -s $(printf '%q' "${tmux_session_name}")")
+      shift
+      ;;
+    --tmux=*)
+      tmux_session_name="${1#*=}"
+      [[ -z "${tmux_session_name}" ]] && { echo "error: --tmux requires a non-empty session name when used with =" >&2; exit 1; }
+      container_cmd=(zsh -lc "exec tmux -CC new-session -A -s $(printf '%q' "${tmux_session_name}")")
+      shift
+      ;;
     *)
-      echo "usage: ai-shell [-e VAR] [-e VAR=value] ..." >&2
+      echo "usage: ai-shell [--tmux[=SESSION_NAME]] [-e VAR] [-e VAR=value] ..." >&2
       exit 1
       ;;
   esac
@@ -47,4 +67,4 @@ if [[ -n "${CONTAINER_NAME}" ]]; then
   docker_args+=(--name "${CONTAINER_NAME}")
 fi
 
-exec docker "${docker_args[@]}" "${IMAGE_NAME}" zsh -l
+exec docker "${docker_args[@]}" "${IMAGE_NAME}" "${container_cmd[@]}"
