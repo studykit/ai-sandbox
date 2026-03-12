@@ -5,6 +5,7 @@ set -e
 # Usage:
 #   provision          — sync config files only (update)
 #   provision --init   — full initial setup (clone p10k, install uv, install agents)
+#   provision --install <program> [<program> ...]
 
 HOME_DIR="${HOME:-/home/ubuntu}"
 NPM_PREFIX="${NPM_CONFIG_PREFIX:-${HOME_DIR}/.npm-global}"
@@ -12,10 +13,33 @@ CODEX_NPM_PACKAGE="${CODEX_NPM_PACKAGE:-@openai/codex@latest}"
 TYPESCRIPT_LANGUAGE_SERVER_PACKAGE="${TYPESCRIPT_LANGUAGE_SERVER_PACKAGE:-typescript-language-server}"
 TYPESCRIPT_PACKAGE="${TYPESCRIPT_PACKAGE:-typescript}"
 PYRIGHT_PACKAGE="${PYRIGHT_PACKAGE:-pyright}"
+PLAYWRIGHT_PACKAGE="${PLAYWRIGHT_PACKAGE:-playwright}"
 
 export HOME="${HOME_DIR}"
 export NPM_CONFIG_PREFIX="${NPM_PREFIX}"
 export PATH="${HOME_DIR}/.local/bin:${NPM_PREFIX}/bin:${PATH}"
+
+usage() {
+  cat <<'EOF'
+Usage:
+  provision
+  provision --init
+  provision --install <program> [<program> ...]
+
+Programs:
+  all
+  uv
+  powerlevel10k
+  codex
+  claude
+  opencode
+  copilot
+  typescript
+  typescript-language-server
+  pyright
+  playwright
+EOF
+}
 
 sync_configs() {
   cp /preferences/zshrc    $HOME/.zshrc
@@ -78,6 +102,17 @@ install_pyright() {
   npm install -g "${PYRIGHT_PACKAGE}"
 }
 
+install_playwright() {
+  if command -v playwright >/dev/null 2>&1; then
+    echo "playwright already installed at $(command -v playwright)"
+  else
+    npm install -g "${PLAYWRIGHT_PACKAGE}"
+  fi
+
+  mkdir -p "${PLAYWRIGHT_BROWSERS_PATH:-${HOME_DIR}/.cache/ms-playwright}"
+  playwright install chromium
+}
+
 install_claude() {
   if [[ -x "${HOME_DIR}/.local/bin/claude" ]]; then
     echo "claude already installed at ${HOME_DIR}/.local/bin/claude"
@@ -111,18 +146,107 @@ install_agents() {
   install_typescript
   install_typescript_language_server
   install_pyright
+  install_playwright
   echo "agent installation completed"
 }
 
-init_home() {
-  git clone --depth=1 https://github.com/romkatv/powerlevel10k.git $HOME/.powerlevel10k
-  mkdir -p $HOME/.local/bin $HOME/.npm-global $HOME/.npm $HOME/.cache
+install_powerlevel10k() {
+  if [[ -d "${HOME_DIR}/.powerlevel10k/.git" || -f "${HOME_DIR}/.powerlevel10k/powerlevel10k.zsh-theme" ]]; then
+    echo "powerlevel10k already installed at ${HOME_DIR}/.powerlevel10k"
+    return
+  fi
+  git clone --depth=1 https://github.com/romkatv/powerlevel10k.git "${HOME_DIR}/.powerlevel10k"
+}
+
+install_uv() {
+  if command -v uv >/dev/null 2>&1; then
+    echo "uv already installed at $(command -v uv)"
+    return
+  fi
   curl -LsSf https://astral.sh/uv/install.sh | sh
+}
+
+install_program() {
+  case "$1" in
+    all)
+      install_powerlevel10k
+      install_uv
+      install_agents
+      ;;
+    uv)
+      install_uv
+      ;;
+    powerlevel10k)
+      install_powerlevel10k
+      ;;
+    codex)
+      install_codex
+      ;;
+    claude)
+      install_claude
+      ;;
+    opencode)
+      install_opencode
+      ;;
+    copilot)
+      install_copilot
+      ;;
+    typescript)
+      install_typescript
+      ;;
+    typescript-language-server)
+      install_typescript_language_server
+      ;;
+    pyright)
+      install_pyright
+      ;;
+    playwright)
+      install_playwright
+      ;;
+    *)
+      echo "Unknown program: $1" >&2
+      usage >&2
+      exit 1
+      ;;
+  esac
+}
+
+init_home() {
+  mkdir -p $HOME/.local/bin $HOME/.npm-global $HOME/.npm $HOME/.cache
+  install_powerlevel10k
+  install_uv
   install_agents
 }
 
-sync_configs
-
-if [[ "$1" == "--init" ]]; then
-  init_home
-fi
+case "${1:-}" in
+  "")
+    sync_configs
+    ;;
+  --init)
+    sync_configs
+    init_home
+    sync_configs
+    ;;
+  --install)
+    shift
+    if [[ $# -eq 0 ]]; then
+      echo "--install requires at least one program name" >&2
+      usage >&2
+      exit 1
+    fi
+    sync_configs
+    mkdir -p "${HOME_DIR}/.local/bin" "${NPM_PREFIX}/bin" "${HOME_DIR}/.local/zsh/completion" "${HOME_DIR}/.npm" "${HOME_DIR}/.cache"
+    for program in "$@"; do
+      install_program "${program}"
+    done
+    sync_configs
+    ;;
+  -h|--help)
+    usage
+    ;;
+  *)
+    echo "Unknown argument: $1" >&2
+    usage >&2
+    exit 1
+    ;;
+esac

@@ -1,7 +1,7 @@
 IMAGE_NAME   ?= ai-sandbox
 HOME_VOLUME  ?= ai-sandbox-home
 
-.PHONY: build home-volume update clean-home-volume
+.PHONY: build home-volume update install clean-home-volume
 
 all: build home-volume
 
@@ -37,6 +37,27 @@ update:
 		-v "$$(pwd)/scripts/provision":/usr/local/bin/provision:ro \
 		$(IMAGE_NAME) provision
 	@echo "Config files updated in volume $(HOME_VOLUME)."
+
+# Install one or more programs into an existing volume.
+# Example: make install PROGRAMS="codex playwright"
+install:
+	@if ! docker volume inspect $(HOME_VOLUME) >/dev/null 2>&1; then \
+		echo "Volume $(HOME_VOLUME) does not exist. Run 'make home-volume' first."; \
+		exit 1; \
+	fi
+	@if [ -z "$(PROGRAMS)" ]; then \
+		echo "PROGRAMS is required."; \
+		echo "Installable programs: all uv powerlevel10k codex claude opencode copilot typescript typescript-language-server pyright playwright"; \
+		echo "Example: make install PROGRAMS=\"codex playwright\""; \
+		exit 1; \
+	fi
+	docker run --rm \
+		-v $(HOME_VOLUME):/home/ubuntu \
+		-v "$$(pwd)/preferences":/preferences:ro \
+		-v "$$(pwd)/completions/container":/completions/container:ro \
+		-v "$$(pwd)/scripts/provision":/usr/local/bin/provision:ro \
+		$(IMAGE_NAME) provision --install $(PROGRAMS)
+	@echo "Installed programs into volume $(HOME_VOLUME): $(PROGRAMS)"
 
 clean-home-volume:
 	docker volume rm -f $(HOME_VOLUME)

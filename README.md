@@ -5,6 +5,7 @@ Ubuntu-based Docker image for running `codex`, `claude`, `opencode`, `copilot`, 
 ## Included tools
 
 - AI CLIs: `codex`, `claude`, `opencode`, `copilot`
+- Browser automation: `playwright` with Chromium installed during home-volume initialization
 - Terminal browser: `carbonyl`
 - Runtimes: `node`, `npm`, `python`, `python3`, `pip`, `uv`, `perl`
 - Common tools: `awk`, `sed`, `grep`, `find`, `fd`, `rg`, `jq`, `git`, `curl`, `wget`, `make`, `patch`, `tar`, `zip`, `unzip`, `tree`, `tmux`
@@ -41,6 +42,7 @@ This runs `scripts/provision --init`, which:
 - Installs `uv`
 - Installs agent CLIs (`codex`, `claude`, `opencode`, `copilot`)
 - Installs global npm language tools (`typescript`, `typescript-language-server`, `pyright`)
+- Installs `playwright` and downloads Chromium into the home volume
 
 Because `/home/ubuntu` is a persistent Docker volume, you only need to run this once per volume.
 
@@ -51,6 +53,30 @@ To re-sync dotfiles and preferences into an existing volume without reinstalling
 ```bash
 make update
 ```
+
+## Install programs into an existing volume
+
+To install specific programs later without recreating the volume:
+
+```bash
+make install PROGRAMS="codex playwright"
+```
+
+This runs `scripts/provision --install ...`.
+
+Supported program names:
+
+- `all`
+- `uv`
+- `powerlevel10k`
+- `codex`
+- `claude`
+- `opencode`
+- `copilot`
+- `typescript`
+- `typescript-language-server`
+- `pyright`
+- `playwright`
 
 ## Reset
 
@@ -65,14 +91,20 @@ make home-volume
 
 Run the helper script from the host project directory you want to work in:
 
-```bash
+```zsh
 ./ai-shell
 ```
 
-If you want the container to open directly into iTerm2 tmux control mode:
+The helper itself is written for host `zsh`.
+
+By default, `./ai-shell` starts the container in `tmux -CC` using the current directory name as the session name.
+
+If `.aienv` exists in the current working directory, `./ai-shell` automatically passes it to Docker as `--env-file`.
+
+To override the default session behavior:
 
 ```bash
-./ai-shell --tmux
+./ai-shell --shell
 
 # Or set an explicit tmux session name
 ./ai-shell --tmux my-session
@@ -92,9 +124,10 @@ docker run --rm -it \
 
 What the script does:
 
-- starts the container in `zsh` by default
-- can start the container in `tmux -CC` with `--tmux`
-- uses the current working directory name as the default tmux session name for `--tmux`
+- starts the container in `tmux -CC` by default
+- uses the current working directory name as the default tmux session name
+- can start the container in plain `zsh` with `--shell`
+- can use a different tmux session name with `--tmux`
 - mounts the current host directory into the container at the exact same absolute path
 - sets the container working directory to that same path
 - mounts a persistent Docker volume to `/home/ubuntu` so agent binaries, login state, and settings survive container restarts
@@ -123,6 +156,21 @@ Use `-e` to forward host environment variables into the container:
 # Mix both forms
 ./ai-shell -e OPENAI_API_KEY -e MY_VAR=hello
 ```
+
+If you already keep variables in a file:
+
+```bash
+# Automatically uses ./.aienv when present
+./ai-shell
+
+# Use a different file explicitly
+./ai-shell --env-file .env
+./ai-shell --env-file .env.local -e DEBUG=1
+```
+
+By default, `./ai-shell` automatically loads `.aienv` from the current working directory if that file exists. Use `--env-file` to override that default with a different file.
+
+`--env-file` accepts standard Docker env-file syntax (`KEY=value` or `KEY` per line). You can combine it with `-e`; explicit `-e` values override values from the file.
 
 ### Host-side tab completion
 

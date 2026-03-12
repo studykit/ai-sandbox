@@ -1,6 +1,6 @@
 #compdef ai-shell
 
-_ai-shell_envvars() {
+_ai_shell_envvars() {
   local -a envvars
   local k
   for k in ${(k)parameters[(R)*export*]}; do
@@ -20,10 +20,12 @@ _ai-shell_envvars() {
   _describe 'environment variable' envvars
 }
 
-_ai-shell() {
-  _arguments -s \
-    '--tmux=[Start the container in tmux control mode with an optional tmux session name]:session name:' \
-    '*-e[Pass environment variable to container]: :_ai-shell_envvars'
+_ai_shell_envfiles() {
+  _files
 }
 
-_ai-shell "$@"
+_arguments -s \
+  '(-t --tmux --shell)'{-t,--tmux}'[Start the container in tmux control mode with an optional tmux session name]:session name:' \
+  '(-t --tmux --shell)--shell[Start the container in a plain login shell instead of tmux]' \
+  '--env-file=[Load environment variables from a file]:env file:_ai_shell_envfiles' \
+  '*-e[Pass environment variable to container]:environment variable:_ai_shell_envvars'
