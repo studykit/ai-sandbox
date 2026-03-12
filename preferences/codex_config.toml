@@ -2,5 +2,21 @@ approval_policy = "never"
 sandbox_policy = "danger-full-access"
 model = "gpt-5.4"
 model_reasoning_effort = "medium"
+
 [tui]
 alternate_screen = "never"
+
+[profiles.fast]
+model = "gpt-5.4"
+model_reasoning_effort = "low"
+
+[profiles.high]
+model = "gpt-5.4"
+model_reasoning_effort = "high"
+service_tier = "fast"
+
+[profiles.xhigh]
+model = "gpt-5.4"
+model_reasoning_effort = "xhigh"
+service_tier = "fast"
+
