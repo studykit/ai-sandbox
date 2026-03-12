@@ -18,13 +18,13 @@ create-home-volume:
 	docker run --rm \
 		-v $(HOME_VOLUME):/home/ubuntu \
 		-v "$$(pwd)/preferences":/preferences:ro \
-		-v "$$(pwd)/zsh-completion":/zsh-completion:ro \
+		-v "$$(pwd)/completions/container":/completions/container:ro \
 		-v "$$(pwd)/scripts/provision":/usr/local/bin/provision:ro \
 		$(IMAGE_NAME) provision --init
 	@echo "Volume $(HOME_VOLUME) created and populated."
 
 
-# Copy config files from preferences/ and zsh-completion/ into existing volume
+# Copy config files from preferences/ and completions/ into existing volume
 update:
 	@if ! docker volume inspect $(HOME_VOLUME) >/dev/null 2>&1; then \
 		echo "Volume $(HOME_VOLUME) does not exist. Run 'make home-volume' first."; \
@@ -33,7 +33,7 @@ update:
 	docker run --rm \
 		-v $(HOME_VOLUME):/home/ubuntu \
 		-v "$$(pwd)/preferences":/preferences:ro \
-		-v "$$(pwd)/zsh-completion":/zsh-completion:ro \
+		-v "$$(pwd)/completions/container":/completions/container:ro \
 		-v "$$(pwd)/scripts/provision":/usr/local/bin/provision:ro \
 		$(IMAGE_NAME) provision
 	@echo "Config files updated in volume $(HOME_VOLUME)."

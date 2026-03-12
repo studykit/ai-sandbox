@@ -9,6 +9,9 @@ set -e
 HOME_DIR="${HOME:-/home/ubuntu}"
 NPM_PREFIX="${NPM_CONFIG_PREFIX:-${HOME_DIR}/.npm-global}"
 CODEX_NPM_PACKAGE="${CODEX_NPM_PACKAGE:-@openai/codex@latest}"
+TYPESCRIPT_LANGUAGE_SERVER_PACKAGE="${TYPESCRIPT_LANGUAGE_SERVER_PACKAGE:-typescript-language-server}"
+TYPESCRIPT_PACKAGE="${TYPESCRIPT_PACKAGE:-typescript}"
+PYRIGHT_PACKAGE="${PYRIGHT_PACKAGE:-pyright}"
 
 export HOME="${HOME_DIR}"
 export NPM_CONFIG_PREFIX="${NPM_PREFIX}"
@@ -32,7 +35,15 @@ sync_configs() {
   fi
 
   mkdir -p $HOME/.local/zsh/completion
-  cp /zsh-completion/* $HOME/.local/zsh/completion/
+  cp /completions/container/* $HOME/.local/zsh/completion/
+
+  if command -v codex >/dev/null 2>&1; then
+    codex completion zsh > $HOME/.local/zsh/completion/_codex
+  fi
+
+  if command -v opencode >/dev/null 2>&1; then
+    opencode completion zsh > $HOME/.local/zsh/completion/_opencode
+  fi
 }
 
 install_codex() {
@@ -41,7 +52,30 @@ install_codex() {
     return
   fi
   npm install -g "${CODEX_NPM_PACKAGE}"
-  "${NPM_PREFIX}/bin/codex" completion zsh > "${HOME_DIR}/.local/zsh/completion/_codex"
+}
+
+install_typescript_language_server() {
+  if command -v typescript-language-server >/dev/null 2>&1; then
+    echo "typescript-language-server already installed at $(command -v typescript-language-server)"
+    return
+  fi
+  npm install -g "${TYPESCRIPT_LANGUAGE_SERVER_PACKAGE}"
+}
+
+install_typescript() {
+  if command -v tsc >/dev/null 2>&1; then
+    echo "typescript already installed at $(command -v tsc)"
+    return
+  fi
+  npm install -g "${TYPESCRIPT_PACKAGE}"
+}
+
+install_pyright() {
+  if command -v pyright >/dev/null 2>&1; then
+    echo "pyright already installed at $(command -v pyright)"
+    return
+  fi
+  npm install -g "${PYRIGHT_PACKAGE}"
 }
 
 install_claude() {
@@ -53,12 +87,11 @@ install_claude() {
 }
 
 install_opencode() {
-  if [[ -x "${HOME_DIR}/.opencode/bin/opencode" ]]; then
-    echo "opencode already installed at ${HOME_DIR}/.opencode/bin/opencode"
+  if command -v opencode >/dev/null 2>&1; then
+    echo "opencode already installed at $(command -v opencode)"
     return
   fi
   curl -fsSL https://opencode.ai/install | bash
-  "${HOME_DIR}/.opencode/bin/opencode" completion zsh > "${HOME_DIR}/.local/zsh/completion/_opencode"
 }
 
 install_copilot() {
@@ -75,6 +108,9 @@ install_agents() {
   install_claude
   install_opencode
   install_copilot
+  install_typescript
+  install_typescript_language_server
+  install_pyright
   echo "agent installation completed"
 }
 

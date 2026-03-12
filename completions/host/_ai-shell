@@ -1,0 +1,28 @@
+#compdef ai-shell
+
+_ai-shell_envvars() {
+  local -a envvars
+  local k
+  for k in ${(k)parameters[(R)*export*]}; do
+    case "$k" in
+      PATH|HOME|USER|LOGNAME|SHELL|TERM|TERM_*|TERMINFO_*) continue ;;
+      TMPDIR|TMPDIR_*|OLDPWD|PWD|SHLVL) continue ;;
+      COLORTERM|COLORFGBG|LC_*) continue ;;
+      SECURITYSESSIONID|LaunchInstanceID|COMMAND_MODE|OSLogRateLimit) continue ;;
+      ITERM_*|__CF*) continue ;;
+      SSH_*|XPC_FLAGS|XPC_SERVICE_NAME) continue ;;
+      MANPATH|INFOPATH|LESS|PAGER|LANG|DISPLAY|WINDOWID) continue ;;
+      FZF_*|P9K_*|_P9K_*|POWERLEVEL9K_*|ZSH_*|DIRENV_*) continue ;;
+      _) continue ;;
+    esac
+    envvars+=("$k")
+  done
+  _describe 'environment variable' envvars
+}
+
+_ai-shell() {
+  _arguments -s \
+    '*-e[Pass environment variable to container]: :_ai-shell_envvars'
+}
+
+_ai-shell "$@"

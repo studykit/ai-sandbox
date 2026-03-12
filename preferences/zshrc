@@ -1,5 +1,3 @@
-function path_prepend { [ -d "$1" ] && [[ ":$PATH:" != *":$1:"* ]] && export PATH="$1:$PATH" }
-function path_append { [ -d "$1" ] && [[ ":$PATH:" != *":$1:"* ]] && export PATH="$PATH:$1" }
 function run { [[ -s "$1" ]] && source "$1" 2>/dev/null;}
 
 run "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
@@ -13,10 +11,6 @@ export LESS=RX
 export LC_CTYPE=en_US.UTF-8
 export EDITOR="vim"
 export DOTNET_INTERACTIVE_CLI_TELEMETRY_OPTOUT=1
-
-
-path_prepend "$HOME/.local/bin"
-path_append "$HOME/.opencode/bin"
 
 
 alias em='emacs -nw'

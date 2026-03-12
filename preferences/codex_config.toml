@@ -1,2 +1,6 @@
-approval_policy = "full-auto"
-sandbox_policy = "none"
+approval_policy = "never"
+sandbox_policy = "danger-full-access"
+model = "gpt-5.4"
+model_reasoning_effort = "medium"
+[tui]
+alternate_screen = "never"

@@ -36,10 +36,11 @@ make home-volume
 This runs `scripts/provision --init`, which:
 
 - Copies dotfiles and preferences from `preferences/` into `/home/ubuntu`
-- Copies zsh completions from `zsh-completion/` into `/home/ubuntu/.local/zsh/completion/`
+- Copies zsh completions from `completions/container/` into `/home/ubuntu/.local/zsh/completion/`
 - Clones powerlevel10k
 - Installs `uv`
 - Installs agent CLIs (`codex`, `claude`, `opencode`, `copilot`)
+- Installs global npm language tools (`typescript`, `typescript-language-server`, `pyright`)
 
 Because `/home/ubuntu` is a persistent Docker volume, you only need to run this once per volume.
 
@@ -96,6 +97,32 @@ opencode
 copilot
 ```
 
+## Passing environment variables
+
+Use `-e` to forward host environment variables into the container:
+
+```bash
+# Forward by name (reads the current value from the host shell)
+./ai-shell -e OPENAI_API_KEY -e ANTHROPIC_API_KEY
+
+# Set an explicit value
+./ai-shell -e DEBUG=1
+
+# Mix both forms
+./ai-shell -e OPENAI_API_KEY -e MY_VAR=hello
+```
+
+### Host-side tab completion
+
+`completions/host/_ai-shell` provides zsh completion for the `-e` flag, suggesting host environment variable names on Tab.
+
+To enable it, add to your `~/.zshrc`:
+
+```zsh
+fpath=(/path/to/ai-sandbox/completions/host $fpath)
+autoload -Uz compinit && compinit
+```
+
 ## Script options
 
 You can override the defaults with environment variables:
@@ -109,6 +136,14 @@ Optional variables:
 - `IMAGE_NAME`: image tag to run, default `ai-sandbox:latest`
 - `HOME_VOLUME`: Docker volume name mounted at `/home/ubuntu`, default `ai-sandbox-home`
 - `CONTAINER_NAME`: optional explicit container name
+
+## Completions directory
+
+```
+completions/
+├── host/          # Loaded by the host zsh (e.g. _ai-shell)
+└── container/     # Copied into the container during provisioning (e.g. _claude, _gemini)
+```
 
 ## Notes
 
