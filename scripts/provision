@@ -48,9 +48,9 @@ sync_configs() {
 
   [[ -f /preferences/gitconfig ]] && cp /preferences/gitconfig $HOME/.gitconfig || true
 
-  if [[ -f /preferences/codex_auth.json ]]; then
+  if [[ -f /credentials/codex_auth.json ]]; then
     mkdir -p $HOME/.codex
-    cp /preferences/codex_auth.json $HOME/.codex/auth.json
+    cp /credentials/codex_auth.json $HOME/.codex/auth.json
   fi
 
   if [[ -f /preferences/codex_config.toml ]]; then
@@ -118,7 +118,59 @@ install_claude() {
     echo "claude already installed at ${HOME_DIR}/.local/bin/claude"
     return
   fi
-  curl -fsSL https://claude.ai/install.sh | bash -s latest
+
+  local gcs_bucket="https://storage.googleapis.com/claude-code-dist-86c565f3-f756-42ad-8dfa-d59b1c096819/claude-code-releases"
+  local download_dir="${HOME_DIR}/.claude/downloads"
+  mkdir -p "${download_dir}"
+
+  # Detect platform
+  local arch
+  case "$(uname -m)" in
+    x86_64|amd64) arch="x64" ;;
+    arm64|aarch64) arch="arm64" ;;
+    *) echo "Unsupported architecture: $(uname -m)" >&2; return 1 ;;
+  esac
+
+  local platform="linux-${arch}"
+  if [[ -f /lib/libc.musl-x86_64.so.1 ]] || [[ -f /lib/libc.musl-aarch64.so.1 ]] || ldd /bin/ls 2>&1 | grep -q musl; then
+    platform="linux-${arch}-musl"
+  fi
+
+  echo "Installing Claude Code native build latest..."
+
+  local version
+  version=$(curl -fsSL "${gcs_bucket}/latest")
+
+  local manifest_json
+  manifest_json=$(curl -fsSL "${gcs_bucket}/${version}/manifest.json")
+
+  local checksum
+  checksum=$(echo "${manifest_json}" | jq -r ".platforms[\"${platform}\"].checksum // empty")
+  if [[ -z "${checksum}" || ! "${checksum}" =~ ^[a-f0-9]{64}$ ]]; then
+    echo "Platform ${platform} not found in manifest" >&2
+    return 1
+  fi
+
+  local binary_path="${download_dir}/claude-${version}-${platform}"
+  curl -fsSL -o "${binary_path}" "${gcs_bucket}/${version}/${platform}/claude"
+
+  local actual
+  actual=$(sha256sum "${binary_path}" | cut -d' ' -f1)
+  if [[ "${actual}" != "${checksum}" ]]; then
+    echo "Checksum verification failed" >&2
+    rm -f "${binary_path}"
+    return 1
+  fi
+
+  chmod +x "${binary_path}"
+
+  # Manual install: place binary directly instead of running `claude install`
+  # which OOM-kills in memory-constrained containers
+  mkdir -p "${HOME_DIR}/.local/bin"
+  cp "${binary_path}" "${HOME_DIR}/.local/bin/claude"
+  rm -f "${binary_path}"
+
+  echo "Claude Code installed to ${HOME_DIR}/.local/bin/claude"
 }
 
 install_opencode() {

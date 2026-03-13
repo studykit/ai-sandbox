@@ -88,7 +88,7 @@ docker_args=(
   --rm
   -it
   --mount "type=bind,source=${HOST_PWD},target=${HOST_PWD}"
-  --mount "type=volume,source=${HOME_VOLUME},target=/home/ubuntu"
+  -v "${HOME_VOLUME}:/home/ubuntu:z"
   -w "${HOST_PWD}"
   -e "HOST_PWD=${HOST_PWD}"
   "${env_args[@]}"

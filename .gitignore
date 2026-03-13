@@ -1,3 +1,3 @@
 gitconfig
 *.local.json
-codex_auth.json
+credentials/
