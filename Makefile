@@ -30,6 +30,17 @@ define ensure-host-configs
 	fi
 endef
 
+define docker-provision
+	docker run --rm \
+		--log-driver=none \
+		-v $(HOME_VOLUME):/home/ubuntu:z \
+		-v "$$(pwd)/preferences":/preferences:ro \
+		-v "$$(pwd)/credentials":/credentials:ro \
+		-v "$$(pwd)/completions/container":/completions/container:ro \
+		-v "$$(pwd)/scripts/provision":/usr/local/bin/provision:ro \
+		$(IMAGE_NAME) provision $(1)
+endef
+
 all: build home-volume
 
 build:
@@ -43,13 +54,7 @@ create-home-volume:
 	fi
 	$(ensure-host-configs)
 	docker volume create $(HOME_VOLUME)
-	docker run --rm \
-		-v $(HOME_VOLUME):/home/ubuntu:z \
-		-v "$$(pwd)/preferences":/preferences:ro \
-		-v "$$(pwd)/credentials":/credentials:ro \
-		-v "$$(pwd)/completions/container":/completions/container:ro \
-		-v "$$(pwd)/scripts/provision":/usr/local/bin/provision:ro \
-		$(IMAGE_NAME) provision --init
+	$(call docker-provision,--init)
 	@echo "Volume $(HOME_VOLUME) created and populated."
 
 
@@ -60,13 +65,7 @@ update:
 		exit 1; \
 	fi
 	$(ensure-host-configs)
-	docker run --rm \
-		-v $(HOME_VOLUME):/home/ubuntu:z \
-		-v "$$(pwd)/preferences":/preferences:ro \
-		-v "$$(pwd)/credentials":/credentials:ro \
-		-v "$$(pwd)/completions/container":/completions/container:ro \
-		-v "$$(pwd)/scripts/provision":/usr/local/bin/provision:ro \
-		$(IMAGE_NAME) provision
+	$(call docker-provision)
 	@echo "Config files updated in volume $(HOME_VOLUME)."
 
 # Install one or more programs into an existing volume.
@@ -82,13 +81,7 @@ install:
 		echo "Example: make install PROGRAMS=\"codex playwright\""; \
 		exit 1; \
 	fi
-	docker run --rm \
-		-v $(HOME_VOLUME):/home/ubuntu:z \
-		-v "$$(pwd)/preferences":/preferences:ro \
-		-v "$$(pwd)/credentials":/credentials:ro \
-		-v "$$(pwd)/completions/container":/completions/container:ro \
-		-v "$$(pwd)/scripts/provision":/usr/local/bin/provision:ro \
-		$(IMAGE_NAME) provision --install $(PROGRAMS)
+	$(call docker-provision,--install $(PROGRAMS))
 	@echo "Installed programs into volume $(HOME_VOLUME): $(PROGRAMS)"
 
 clean-home-volume:
