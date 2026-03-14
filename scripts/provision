@@ -17,7 +17,7 @@ PLAYWRIGHT_PACKAGE="${PLAYWRIGHT_PACKAGE:-playwright}"
 
 export HOME="${HOME_DIR}"
 export NPM_CONFIG_PREFIX="${NPM_PREFIX}"
-export PATH="${HOME_DIR}/.local/bin:${NPM_PREFIX}/bin:${PATH}"
+export PATH="${HOME_DIR}/.deno/bin:${HOME_DIR}/.local/bin:${NPM_PREFIX}/bin:${PATH}"
 
 usage() {
   cat <<'EOF'
@@ -29,6 +29,7 @@ Usage:
 Programs:
   all
   uv
+  deno
   powerlevel10k
   codex
   claude
@@ -65,9 +66,21 @@ sync_configs() {
     codex completion zsh > $HOME/.local/zsh/completion/_codex
   fi
 
+  if command -v deno >/dev/null 2>&1; then
+    deno completions zsh > $HOME/.local/zsh/completion/_deno
+  fi
+
   if command -v opencode >/dev/null 2>&1; then
     opencode completion zsh > $HOME/.local/zsh/completion/_opencode
   fi
+}
+
+install_deno() {
+  if command -v deno >/dev/null 2>&1; then
+    echo "deno already installed at $(command -v deno)"
+    return
+  fi
+  curl -fsSL https://deno.land/install.sh | sh
 }
 
 install_codex() {
@@ -191,6 +204,7 @@ install_copilot() {
 
 install_agents() {
   mkdir -p "${HOME_DIR}/.local/bin" "${NPM_PREFIX}/bin" "${HOME_DIR}/.local/zsh/completion"
+  install_deno
   install_codex
   install_claude
   install_opencode
@@ -230,6 +244,9 @@ install_program() {
       ;;
     powerlevel10k)
       install_powerlevel10k
+      ;;
+    deno)
+      install_deno
       ;;
     codex)
       install_codex

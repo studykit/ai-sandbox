@@ -7,6 +7,7 @@ run $HOME/.env
 
 [[ -n "$TMUX" ]] && bindkey -e
 
+export PATH="$HOME/.deno/bin:$PATH"
 export LESS=RX
 export LC_CTYPE=en_US.UTF-8
 export EDITOR="vim"

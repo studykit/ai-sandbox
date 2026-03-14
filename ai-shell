@@ -87,6 +87,7 @@ docker_args=(
   run
   --rm
   -it
+  --log-driver=none
   --mount "type=bind,source=${HOST_PWD},target=${HOST_PWD}"
   -v "${HOME_VOLUME}:/home/ubuntu:z"
   -w "${HOST_PWD}"

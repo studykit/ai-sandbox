@@ -78,7 +78,7 @@ install:
 	fi
 	@if [ -z "$(PROGRAMS)" ]; then \
 		echo "PROGRAMS is required."; \
-		echo "Installable programs: all uv powerlevel10k codex claude opencode copilot typescript typescript-language-server pyright playwright"; \
+		echo "Installable programs: all uv deno powerlevel10k codex claude opencode copilot typescript typescript-language-server pyright playwright"; \
 		echo "Example: make install PROGRAMS=\"codex playwright\""; \
 		exit 1; \
 	fi

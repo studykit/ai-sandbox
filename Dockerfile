@@ -8,7 +8,7 @@ ENV TZ=Asia/Seoul \
     SHELL=/usr/bin/zsh \
     HOME=/home/ubuntu \
     NPM_CONFIG_PREFIX=/home/ubuntu/.npm-global \
-    PATH=/home/ubuntu/.opencode/bin:/home/ubuntu/.local/bin:/home/ubuntu/.npm-global/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+    PATH=/home/ubuntu/.deno/bin:/home/ubuntu/.opencode/bin:/home/ubuntu/.local/bin:/home/ubuntu/.npm-global/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
@@ -24,6 +24,7 @@ RUN apt-get update \
         findutils \
         gawk \
         git \
+        git-lfs \
         gnupg \
         grep \
         gzip \
