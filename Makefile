@@ -31,6 +31,17 @@ define ensure-host-configs
 			esac; \
 		fi; \
 	fi
+	@if [ ! -f credentials/ssh_github ]; then \
+		if [ -f "$$HOME/.ssh/github.com" ]; then \
+			printf "credentials/ssh_github not found. Copy from ~/.ssh/github.com? [y/N] "; \
+			read ans; \
+			case "$$ans" in \
+				[yY]*) cp "$$HOME/.ssh/github.com" credentials/ssh_github; \
+				       echo "Copied ~/.ssh/github.com → credentials/ssh_github";; \
+				*) echo "Skipping ssh github key.";; \
+			esac; \
+		fi; \
+	fi
 	@if [ ! -f preferences/gitconfig ]; then \
 		if [ -f "$$HOME/.gitconfig" ]; then \
 			printf "preferences/gitconfig not found. Copy from ~/.gitconfig? [y/N] "; \
