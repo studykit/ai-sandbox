@@ -27,6 +27,29 @@ alias ll='ls -al'
 alias xclaude='claude --allow-dangerously-skip-permissions'
 alias xcodex='codex --dangerously-bypass-approvals-and-sandbox'
 
+# gh copilot lazy loading
+if command -v gh &>/dev/null; then
+  function _gh_copilot_lazy_init {
+    unset -f gh ghcs ghce 2>/dev/null
+    gh extension list | grep -q 'copilot' && eval "$(gh copilot alias -- zsh)"
+  }
+
+  function gh {
+    _gh_copilot_lazy_init
+    command gh "$@"
+  }
+
+  function ghcs {
+    _gh_copilot_lazy_init
+    eval "ghcs \"$@\""
+  }
+
+  function ghce {
+    _gh_copilot_lazy_init
+    eval "ghce \"$@\""
+  }
+fi
+
 # direnv
 if command -v direnv &>/dev/null; then
   eval "$(direnv hook zsh)"
