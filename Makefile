@@ -33,7 +33,7 @@ endef
 define docker-provision
 	docker run --rm \
 		--log-driver=none \
-		-v $(HOME_VOLUME):/home/ubuntu:z \
+		-v $(HOME_VOLUME):/home:z \
 		-v "$$(pwd)/preferences":/preferences:ro \
 		-v "$$(pwd)/credentials":/credentials:ro \
 		-v "$$(pwd)/completions/container":/completions/container:ro \
@@ -77,7 +77,7 @@ install:
 	fi
 	@if [ -z "$(PROGRAMS)" ]; then \
 		echo "PROGRAMS is required."; \
-		echo "Installable programs: all uv deno powerlevel10k codex claude opencode copilot typescript typescript-language-server pyright playwright"; \
+		echo "Installable programs: all uv deno powerlevel10k codex claude opencode copilot typescript typescript-language-server pyright homebrew playwright"; \
 		echo "Example: make install PROGRAMS=\"codex playwright\""; \
 		exit 1; \
 	fi

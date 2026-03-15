@@ -89,7 +89,7 @@ docker_args=(
   -it
   --log-driver=none
   --mount "type=bind,source=${HOST_PWD},target=${HOST_PWD}"
-  -v "${HOME_VOLUME}:/home/ubuntu:z"
+  -v "${HOME_VOLUME}:/home:z"
   -w "${HOST_PWD}"
   -e "HOST_PWD=${HOST_PWD}"
   "${env_args[@]}"

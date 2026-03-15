@@ -1,0 +1,41 @@
+#!/bin/sh
+set -e
+
+# Migrate ai-sandbox-home volume from /home/ubuntu mount to /home mount.
+# Moves all files into /home/debian and fixes ownership.
+#
+# Usage:
+#   docker run --rm -v ai-sandbox-home:/mnt ai-sandbox:latest /scripts/migrate-volume
+
+MNT="/mnt"
+TARGET="${MNT}/debian"
+
+# Get debian user's UID/GID from the image
+DEBIAN_UID="$(id -u debian)"
+DEBIAN_GID="$(id -g debian)"
+
+echo "debian UID=${DEBIAN_UID} GID=${DEBIAN_GID}"
+
+# Abort if already migrated
+if [ -d "${TARGET}" ] && [ -f "${TARGET}/.zshrc" ]; then
+  echo "Already migrated: ${TARGET} exists with .zshrc"
+  exit 0
+fi
+
+echo "Creating ${TARGET}..."
+mkdir -p "${TARGET}"
+
+echo "Moving files to ${TARGET}..."
+cd "${MNT}"
+for f in * .[!.]* ..?*; do
+  [ "$f" = "." ] || [ "$f" = ".." ] || [ "$f" = "debian" ] && continue
+  [ -e "$f" ] || continue
+  mv "$f" "${TARGET}/"
+done
+
+echo "Fixing ownership to ${DEBIAN_UID}:${DEBIAN_GID}..."
+chown -R "${DEBIAN_UID}:${DEBIAN_GID}" "${TARGET}"
+
+echo "Migration complete."
+ls -la "${MNT}/"
+ls -la "${TARGET}/" | head -20

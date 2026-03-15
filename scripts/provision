@@ -7,7 +7,7 @@ set -e
 #   provision --init   — full initial setup (clone p10k, install uv, install agents)
 #   provision --install <program> [<program> ...]
 
-HOME_DIR="${HOME:-/home/ubuntu}"
+HOME_DIR="${HOME:-/home/debian}"
 NPM_PREFIX="${NPM_CONFIG_PREFIX:-${HOME_DIR}/.npm-global}"
 CODEX_NPM_PACKAGE="${CODEX_NPM_PACKAGE:-@openai/codex@latest}"
 TYPESCRIPT_LANGUAGE_SERVER_PACKAGE="${TYPESCRIPT_LANGUAGE_SERVER_PACKAGE:-typescript-language-server}"
@@ -38,6 +38,7 @@ Programs:
   typescript
   typescript-language-server
   pyright
+  homebrew
   playwright
 EOF
 }
@@ -143,6 +144,16 @@ install_opencode() {
   curl -fsSL https://opencode.ai/install | bash
 }
 
+install_homebrew() {
+  if command -v brew >/dev/null 2>&1; then
+    echo "homebrew already installed at $(command -v brew)"
+    return
+  fi
+  sudo mkdir -p /home/linuxbrew
+  sudo chown "$(id -u):$(id -g)" /home/linuxbrew
+  NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+}
+
 install_copilot() {
   if [[ -x "${HOME_DIR}/.local/bin/copilot" ]]; then
     echo "copilot already installed at ${HOME_DIR}/.local/bin/copilot"
@@ -184,6 +195,7 @@ install_uv() {
 install_program() {
   case "$1" in
     all)
+      install_homebrew
       install_powerlevel10k
       install_uv
       install_agents
@@ -218,6 +230,9 @@ install_program() {
     pyright)
       install_pyright
       ;;
+    homebrew)
+      install_homebrew
+      ;;
     playwright)
       install_playwright
       ;;
@@ -231,6 +246,7 @@ install_program() {
 
 init_home() {
   mkdir -p $HOME/.local/bin $HOME/.npm-global $HOME/.npm $HOME/.cache
+  install_homebrew
   install_powerlevel10k
   install_uv
   install_agents

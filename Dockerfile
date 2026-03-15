@@ -1,4 +1,4 @@
-FROM ubuntu:24.04
+FROM debian:trixie
 
 ARG DEBIAN_FRONTEND=noninteractive
 ARG NODE_MAJOR=24
@@ -6,11 +6,14 @@ ENV TZ=Asia/Seoul \
     LANG=en_US.UTF-8 \
     LC_ALL=en_US.UTF-8 \
     SHELL=/usr/bin/zsh \
-    HOME=/home/ubuntu \
-    NPM_CONFIG_PREFIX=/home/ubuntu/.npm-global \
-    PATH=/home/ubuntu/.deno/bin:/home/ubuntu/.opencode/bin:/home/ubuntu/.local/bin:/home/ubuntu/.npm-global/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+    HOME=/home/debian \
+    NPM_CONFIG_PREFIX=/home/debian/.npm-global \
+    PATH=/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin:/home/debian/.deno/bin:/home/debian/.opencode/bin:/home/debian/.local/bin:/home/debian/.npm-global/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
-RUN apt-get update \
+RUN sed -i -e 's|http://deb.debian.org/debian|http://ftp.kaist.ac.kr/debian|g' \
+           -e 's|http://deb.debian.org/debian-security|http://ftp.kaist.ac.kr/debian-security|g' \
+           /etc/apt/sources.list.d/debian.sources \
+    && apt-get update \
     && apt-get install -y --no-install-recommends \
         bash \
         bzip2 \
@@ -37,11 +40,11 @@ RUN apt-get update \
         libexpat1 \
         locales \
         make \
-        libasound2t64 \
-        libcups2t64 \
+        libasound2 \
+        libcups2 \
         libdrm2 \
         libfontconfig1 \
-        libglib2.0-0t64 \
+        libglib2.0-0 \
         libnspr4 \
         libnss3 \
         libu2f-udev \
@@ -83,7 +86,8 @@ RUN apt-get update \
         build-essential \
         fd-find \
         fonts-liberation \
-        python-is-python3 \
+    && ln -sf /usr/bin/python3 /usr/bin/python \
+    && sed -i '/^#\s*en_US.UTF-8/s/^#\s*//' /etc/locale.gen \
     && locale-gen en_US.UTF-8 \
     && update-locale LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 \
     && ln -snf /usr/share/zoneinfo/Asia/Seoul /etc/localtime \
@@ -93,7 +97,7 @@ RUN apt-get update \
 RUN curl -fsSL "https://deb.nodesource.com/setup_${NODE_MAJOR}.x" | bash - \
     && apt-get install -y --no-install-recommends nodejs \
     && npm cache clean --force \
-    && rm -rf /home/ubuntu/.npm \
+    && rm -rf /home/debian/.npm \
     && mkdir -p -m 755 /etc/apt/keyrings /etc/apt/sources.list.d \
     && wget -nv -O /etc/apt/keyrings/githubcli-archive-keyring.gpg https://cli.github.com/packages/githubcli-archive-keyring.gpg \
     && chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
@@ -102,13 +106,13 @@ RUN curl -fsSL "https://deb.nodesource.com/setup_${NODE_MAJOR}.x" | bash - \
     && apt-get install -y --no-install-recommends gh \
     && rm -rf /var/lib/apt/lists/* \
     && ln -sf /usr/bin/fdfind /usr/local/bin/fd \
-    && usermod -s /usr/bin/zsh -aG sudo ubuntu \
-    && printf '%s\n' 'ubuntu ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/ubuntu \
-    && chmod 0440 /etc/sudoers.d/ubuntu \
+    && useradd -m -s /usr/bin/zsh -G sudo debian \
+    && printf '%s\n' 'debian ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/debian \
+    && chmod 0440 /etc/sudoers.d/debian \
     && mkdir -p /workspace \
-    && chown ubuntu:ubuntu /workspace
+    && chown debian:debian /workspace
 
-USER ubuntu
+USER debian
 
 ENTRYPOINT ["/usr/bin/tini", "--"]
 CMD ["zsh"]
